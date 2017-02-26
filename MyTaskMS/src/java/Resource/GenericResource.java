@@ -6,6 +6,7 @@
 package Resource;
 
 import Models.User.User;
+import Models.User.UserGroup;
 import Util.HibernateUtil;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +29,11 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 
+/*
+Author: parent class, one-to-many, mappedby
+Book: child class, many-to-one, owner, joincolumn
+
+*/
 /**
  * REST Web Service
  *
@@ -35,8 +41,9 @@ import org.hibernate.criterion.Restrictions;
  */
 @Path("/rest")
 public class GenericResource {
+    private final ArrayList<UserGroup> groups;
     private final ArrayList<User> users;
-    
+    private ArrayList<UserGroup> childGroups;
     
     
     @Context
@@ -46,15 +53,62 @@ public class GenericResource {
      * Creates a new instance of GenericResource
      */
     public GenericResource() {
+        this.groups = new ArrayList<>();
         this.users = new ArrayList<>();
+        this.childGroups = new ArrayList<>();
     }
     
     
     @GET
-    @Path("/allusers")
     @Produces(MediaType.APPLICATION_XML)
-    public List<User> getAllUsers(){
-        return this.users;
+    public List<UserGroup> getAllGroups(){
+        SessionFactory sf = HibernateUtil.getInstance().getSessionFactory();
+        Session session = sf.openSession();
+        session.beginTransaction();
+        
+        User user1 = new User("user1");
+        User user2 = new User("user2");
+        User user3 = new User("user3");
+        User user4 = new User("user4");
+        User user5 = new User("user5");
+        
+        this.users.add(user1);
+        this.users.add(user2);
+        this.users.add(user3);
+        this.users.add(user4);
+        this.users.add(user5);
+        
+        this.users.forEach((u) -> {
+            session.saveOrUpdate(u);
+        });
+        
+        UserGroup group1 = new UserGroup("group1");
+        UserGroup group2 = new UserGroup("group2");
+        UserGroup group3 = new UserGroup("group3");
+        /* maintaining just UserGroup part, gives prefered result: groups and their users. But if it follows by maining the  User part  too,
+        then it gives error and doesnt result any thing. And maintaining just User part, shows just groupsIds and not their users. how do u explain
+        this difference? According to following advice of Jboss, both parts should be maintained to give proper result!
+        http://docs.jboss.org/hibernate/core/3.3/reference/en/html/example-parentchild.html#example-parentchild-bidir
+        */
+        group1.addUser(user1);
+        group1.addUser(user2);
+        group3.addUser(user3);
+        /*
+        user1.setUserGroup(group1);
+        user2.setUserGroup(group1);
+        */
+        
+        this.childGroups.add(group3);
+        group1.setChildren(this.childGroups);
+        this.groups.add(group1);
+        this.groups.add(group2);
+        
+        this.groups.forEach((ug) -> {
+            session.saveOrUpdate(ug);
+        });
+        
+        session.getTransaction().commit();
+        return this.groups;
     }
     
 }

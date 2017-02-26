@@ -7,19 +7,34 @@ package Models;
 
 import Models.User.User;
 import Models.User.UserGroup;
+import java.io.Serializable;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  *
  * @author mahdiaza
  */
 
-public class Task {
+@Entity
+public class Task implements Serializable {
     private UserGroup sender;
     private User reciever;
+    private Long taskId;
     
     public Task(){        
     }
     
+    @Id
+    @GeneratedValue
+    public Long getTaskId(){
+        return this.taskId;
+    }
+    
+    public void setTaskId(Long taskId){
+        this.taskId = taskId;
+    }
     public void setSender(UserGroup sender){
         this.sender = sender;
     }
